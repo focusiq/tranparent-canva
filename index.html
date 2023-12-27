@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konva.js Drawable Canvas with Undo</title>
+    <script src="https://unpkg.com/konva@8.2.0/konva.min.js"></script>
+    <style>
+        #container {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Konva.js Drawable Canvas with Undo</h1>
+
+    <div id="container"></div>
+    <br>
+    <button onclick="setDrawingMode(true)">Draw</button>
+    <button onclick="setDrawingMode(false)">Erase</button>
+    <button onclick="undo()">Undo</button>
+    <button onclick="saveCanvas()">Save</button>
+
+    <script>
+        var stage = new Konva.Stage({
+            container: 'container',
+            width: 500,
+            height: 300
+        });
+
+        var layer = new Konva.Layer();
+        stage.add(layer);
+
+        var drawingMode = true; // Default to drawing mode
+        var undoHistory = [];
+
+        function setDrawingMode(mode) {
+            drawingMode = mode;
+        }
+
+        function saveCanvas() {
+            var dataURL = stage.toDataURL();
+            var link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'canvas_image.png';
+            link.click();
+        }
+
+        function undo() {
+            if (undoHistory.length > 0) {
+                var lastState = undoHistory.pop();
+                layer.destroyChildren();
+                Konva.Image.fromURL(lastState, function (image) {
+                    layer.add(image);
+                    stage.draw();
+                });
+            }
+        }
+
+        // Keep track of the canvas state for undo
+        function saveState() {
+            var dataURL = stage.toDataURL();
+            undoHistory.push(dataURL);
+        }
+
+        // Event listeners for drawing and erasing
+        stage.on('mousedown touchstart', function (e) {
+            var line = new Konva.Line({
+                stroke: drawingMode ? 'black' : 'white',
+                strokeWidth: 5,
+                globalCompositeOperation: drawingMode ? 'source-over' : 'destination-out',
+                points: [stage.getPointerPosition().x, stage.getPointerPosition().y]
+            });
+
+            layer.add(line);
+            saveState();
+
+            stage.on('mousemove touchmove', function () {
+                var newPoints = line.points().concat([stage.getPointerPosition().x, stage.getPointerPosition().y]);
+                line.points(newPoints);
+                layer.batchDraw();
+            });
+
+            stage.on('mouseup touchend', function () {
+                stage.off('mousemove touchmove');
+                stage.off('mouseup touchend');
+            });
+        });
+    </script>
+</body>
+
+</html>
