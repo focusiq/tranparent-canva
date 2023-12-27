@@ -4,90 +4,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Konva.js Drawable Canvas with Undo</title>
-    <script src="https://unpkg.com/konva@8.2.0/konva.min.js"></script>
+    <title>Konva.js A4 Canvas</title>
+    <!-- Konva.js -->
+    <script src="https://cdn.rawgit.com/konvajs/konva/2.6.0/konva.min.js"></script>
     <style>
-        #container {
-            border: 1px solid #000;
+        body {
+            cursor: crosshair;
+            /* Set the default cursor to crosshair */
+        }
+
+        body.eraser-mode {
+            cursor: url('path/to/eraser-cursor.png') 5 5, auto;
+            /* Replace 'path/to/eraser-cursor.png' with the path to your eraser cursor image */
         }
     </style>
 </head>
 
 <body>
-    <h1>Konva.js Drawable Canvas with Undo</h1>
-
+    <div>
+        <label for="colorPicker">Color:</label>
+        <input type="color" id="colorPicker" value="#000000">
+        <button onclick="undo()">Undo</button>
+        <button onclick="erase()">Erase</button>
+        <button onclick="save()">Save</button>
+    </div>
     <div id="container"></div>
-    <br>
-    <button onclick="setDrawingMode(true)">Draw</button>
-    <button onclick="setDrawingMode(false)">Erase</button>
-    <button onclick="undo()">Undo</button>
-    <button onclick="saveCanvas()">Save</button>
 
     <script>
-        var stage = new Konva.Stage({
+        const stage = new Konva.Stage({
             container: 'container',
-            width: 500,
-            height: 300
+            width: 793, // A4 width in pixels at 96 dpi
+            height: 1122, // A4 height in pixels at 96 dpi
         });
 
-        var layer = new Konva.Layer();
+        const layer = new Konva.Layer();
         stage.add(layer);
 
-        var drawingMode = true; // Default to drawing mode
-        var undoHistory = [];
+        let isDrawing = false;
+        let lastLine;
 
-        function setDrawingMode(mode) {
-            drawingMode = mode;
-        }
+        stage.on('mousedown touchstart', (e) => {
+            if (eraseMode) {
+                // Eraser mode is handled in mousemove, not mousedown
+                return;
+            }
 
-        function saveCanvas() {
-            var dataURL = stage.toDataURL();
-            var link = document.createElement('a');
-            link.href = dataURL;
-            link.download = 'canvas_image.png';
-            link.click();
-        }
+            isDrawing = true;
+            const pos = stage.getPointerPosition();
+            lastLine = new Konva.Line({
+                stroke: document.getElementById('colorPicker').value,
+                strokeWidth: 5,
+                globalCompositeOperation: 'source-over',
+                points: [pos.x, pos.y],
+            });
+            layer.add(lastLine);
+        });
+
+        stage.on('mousemove touchmove', (e) => {
+            if (eraseMode) {
+                // Eraser mode: update cursor
+                document.body.classList.add('eraser-mode');
+
+                const pos = stage.getPointerPosition();
+                const eraser = new Konva.Circle({
+                    x: pos.x,
+                    y: pos.y,
+                    radius: 10,
+                    fill: 'white',
+                    globalCompositeOperation: 'destination-out',
+                });
+                layer.add(eraser);
+                layer.batchDraw();
+            } else {
+                // Drawing mode: restore default cursor and draw line
+                document.body.classList.remove('eraser-mode');
+
+                if (!isDrawing || !lastLine) return;
+
+                const pos = stage.getPointerPosition();
+                lastLine.points(lastLine.points().concat([pos.x, pos.y]));
+                layer.batchDraw();
+            }
+        });
+
+        stage.on('mouseup touchend', () => {
+            isDrawing = false;
+
+            // Remove eraser circle if present
+            const eraser = layer.findOne('.eraser');
+            if (eraser) {
+                eraser.destroy();
+                layer.batchDraw();
+            }
+        });
 
         function undo() {
-            if (undoHistory.length > 0) {
-                var lastState = undoHistory.pop();
-                layer.destroyChildren();
-                Konva.Image.fromURL(lastState, function (image) {
-                    layer.add(image);
-                    stage.draw();
-                });
+            const children = layer.getChildren();
+            if (children.length > 0) {
+                children[children.length - 1].destroy();
+                layer.batchDraw();
             }
         }
 
-        // Keep track of the canvas state for undo
-        function saveState() {
-            var dataURL = stage.toDataURL();
-            undoHistory.push(dataURL);
+        let eraseMode = false;
+        function erase() {
+            eraseMode = !eraseMode;
+            document.getElementById('colorPicker').disabled = eraseMode;
         }
 
-        // Event listeners for drawing and erasing
-        stage.on('mousedown touchstart', function (e) {
-            var line = new Konva.Line({
-                stroke: drawingMode ? 'black' : 'white',
-                strokeWidth: 5,
-                globalCompositeOperation: drawingMode ? 'source-over' : 'destination-out',
-                points: [stage.getPointerPosition().x, stage.getPointerPosition().y]
-            });
-
-            layer.add(line);
-            saveState();
-
-            stage.on('mousemove touchmove', function () {
-                var newPoints = line.points().concat([stage.getPointerPosition().x, stage.getPointerPosition().y]);
-                line.points(newPoints);
-                layer.batchDraw();
-            });
-
-            stage.on('mouseup touchend', function () {
-                stage.off('mousemove touchmove');
-                stage.off('mouseup touchend');
-            });
-        });
+        function save() {
+            const drawingData = layer.toJSON();
+            console.log(drawingData);
+            // You can save the drawingData as JSON or send it to a server for further processing
+        }
     </script>
 </body>
 
