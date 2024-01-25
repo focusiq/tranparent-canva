@@ -7,17 +7,6 @@
     <title>Konva.js A4 Canvas</title>
     <!-- Konva.js -->
     <script src="https://cdn.rawgit.com/konvajs/konva/2.6.0/konva.min.js"></script>
-    <style>
-        body {
-            cursor: crosshair;
-            /* Set the default cursor to crosshair */
-        }
-
-        body.eraser-mode {
-            cursor: url('path/to/eraser-cursor.png') 5 5, auto;
-            /* Replace 'path/to/eraser-cursor.png' with the path to your eraser cursor image */
-        }
-    </style>
 </head>
 
 <body>
@@ -26,7 +15,8 @@
         <input type="color" id="colorPicker" value="#000000">
         <button onclick="undo()">Undo</button>
         <button onclick="erase()">Erase</button>
-        <button onclick="save()">Save</button>
+        <button onclick="addText()">Add Text</button>
+        <button onclick="save()">Save!</button>
     </div>
     <div id="container"></div>
 
@@ -112,9 +102,64 @@
             document.getElementById('colorPicker').disabled = eraseMode;
         }
 
+        function addText() {
+            const textNode = new Konva.Text({
+                x: 50,
+                y: 50,
+                text: 'Edit me!',
+                fontSize: 18,
+                fill: document.getElementById('colorPicker').value,
+                draggable: true,
+            });
+
+            textNode.on('dblclick', () => {
+                // Handle double click to start editing
+                const textPosition = textNode.absolutePosition();
+                const stageBox = stage.container().getBoundingClientRect();
+
+                // Create an input element for editing
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = textNode.text();
+                input.style.position = 'absolute';
+                input.style.left = textPosition.x + stageBox.left + 'px';
+                input.style.top = textPosition.y + stageBox.top + 'px';
+                input.style.fontSize = textNode.fontSize() + 'px';
+                input.style.color = textNode.fill();
+                input.style.border = 'none';
+                input.style.padding = '0';
+                input.style.margin = '0';
+                input.style.outline = 'none';
+                input.style.background = 'none';
+                input.style.cursor = 'text';
+
+                document.body.appendChild(input);
+                input.focus();
+
+                input.addEventListener('blur', () => {
+                    // Handle blur (loss of focus) to stop editing
+                    textNode.text(input.value);
+                    layer.batchDraw();
+                    document.body.removeChild(input);
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    // Handle Enter key to stop editing
+                    if (e.key === 'Enter') {
+                        input.blur();
+                    }
+                });
+            });
+
+            layer.add(textNode);
+            layer.batchDraw();
+        }
+
         function save() {
             const drawingData = layer.toJSON();
             console.log(drawingData);
+
+            window.localStorage.setItem('heyzine', drawingData)
             // You can save the drawingData as JSON or send it to a server for further processing
         }
     </script>

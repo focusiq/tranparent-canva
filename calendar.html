@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar App</title>
+
+    <!-- Interact.js CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/interactjs@1.10.11/dist/interact.min.css" />
+</head>
+
+<body>
+
+    <div id="calendar"></div>
+
+<div id="stickerContainer">
+    <img src="https://media2.giphy.com/media/3o6gE51uXycrKW6D84/200w.webp" class="draggable-sticker" />
+    <img src="https://media2.giphy.com/media/yoJC2LDinaic6iReFy/200w.webp" class="draggable-sticker" />
+    <img src="https://media0.giphy.com/media/l41YryziohxMVBtmg/200w.webp" class="draggable-sticker" />
+    <!-- Add more stickers as needed -->
+</div>
+
+    <!-- Interact.js script -->
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.11/dist/interact.min.js"></script>
+
+    <script>
+        // Make stickers draggable using Interact.js
+        interact('.draggable-sticker').draggable({
+            inertia: true,
+            autoScroll: true,
+            onmove: dragMoveListener
+        });
+
+        // Drag move listener for stickers
+        function dragMoveListener(event) {
+            const target = event.target;
+            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+            target.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+            target.setAttribute('data-x', x);
+            target.setAttribute('data-y', y);
+        }
+    </script>
+</body>
+
+</html>
