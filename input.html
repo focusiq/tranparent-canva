@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transparent Page</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #transparentPage {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #inputContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            /* Ensure input containers do not interfere with mouse events */
+        }
+
+        .inputSection {
+            position: absolute;
+            pointer-events: auto;
+            /* Allow input sections to receive mouse events */
+        }
+
+        .inputBox {
+            width: 200px;
+            height: 40px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="transparentPage">
+        <div id="inputContainer"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var inputContainer = document.getElementById('inputContainer');
+
+            document.addEventListener('click', function (event) {
+                var inputSection = document.createElement('div');
+                inputSection.classList.add('inputSection');
+                inputSection.style.left = (event.clientX - 100) + 'px'; // Adjust position for centering
+                inputSection.style.top = (event.clientY - 20) + 'px'; // Adjust position for centering
+
+                var inputBox = document.createElement('input');
+                inputBox.classList.add('inputBox');
+                inputBox.type = 'text';
+
+                inputSection.appendChild(inputBox);
+                inputContainer.appendChild(inputSection);
+
+                inputBox.focus(); // Focus on the newly created input box
+            });
+        });
+    </script>
+</body>
+
+</html>
