@@ -98,61 +98,63 @@
         }
 
         function addText() {
-            if (isEditing) return; // Prevent adding new text when editing is active
+                if (isEditing) return;
 
-            const textNode = new Konva.Text({
-                x: 50,
-                y: 50,
-                text: 'Edit me!',
-                fontSize: 18,
-                fill: document.getElementById('colorPicker').value,
-                draggable: true,
-            });
-
-            textNode.on('dblclick', () => {
-                if (isEditing) return; // Prevent starting editing when already editing
-                isEditing = true; // Set editing flag
-
-                textNode.text(''); // Clear the text content
-
-                const textPosition = textNode.absolutePosition();
-                const stageBox = stage.container().getBoundingClientRect();
-
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = ''; // Set initial value to empty string
-                input.style.position = 'absolute';
-                input.style.left = textPosition.x + stageBox.left + 'px';
-                input.style.top = textPosition.y + stageBox.top + 'px';
-                input.style.fontSize = textNode.fontSize() + 'px';
-                input.style.color = textNode.fill();
-                input.style.border = 'none';
-                input.style.padding = '0';
-                input.style.margin = '0';
-                input.style.outline = 'none';
-                input.style.background = 'none';
-                input.style.cursor = 'text';
-
-                document.body.appendChild(input);
-                input.focus();
-
-                input.addEventListener('blur', () => {
-                    textNode.text(input.value);
-                    layer.batchDraw();
-                    document.body.removeChild(input);
-                    isEditing = false; // Reset editing flag
+                const textNode = new Konva.Text({
+                    x: 50,
+                    y: 50,
+                    text: 'Edit me!',
+                    fontSize: 18,
+                    fill: document.getElementById('colorPicker').value,
+                    draggable: true,
+                    stroke: 'black', // Border color
+                    strokeWidth: 1, // Border thickness
                 });
 
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        input.blur();
-                    }
-                });
-            });
+                textNode.on('dblclick', () => {
+                    if (isEditing) return;
+                    isEditing = true;
 
-            layer.add(textNode);
-            layer.batchDraw();
-        }
+                    textNode.text('');
+
+                    const textPosition = textNode.absolutePosition();
+                    const stageBox = stage.container().getBoundingClientRect();
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = '';
+                    input.style.position = 'absolute';
+                    input.style.left = textPosition.x + stageBox.left + 'px';
+                    input.style.top = textPosition.y + stageBox.top + 'px';
+                    input.style.fontSize = textNode.fontSize() + 'px';
+                    input.style.color = textNode.fill();
+                    input.style.border = 'none';
+                    input.style.padding = '0';
+                    input.style.margin = '0';
+                    input.style.outline = 'none';
+                    input.style.background = 'none';
+                    input.style.cursor = 'text';
+
+                    document.body.appendChild(input);
+                    input.focus();
+
+                    input.addEventListener('blur', () => {
+                        textNode.text(input.value);
+                        layer.batchDraw();
+                        document.body.removeChild(input);
+                        isEditing = false;
+                    });
+
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            input.blur();
+                        }
+                    });
+                });
+
+                layer.add(textNode);
+                layer.batchDraw();
+            }
 
         function save() {
             const drawingData = layer.toJSON();
